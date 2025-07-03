@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Lattice Particle Effect</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <canvas id="particle-canvas"></canvas>
+    <div class="controls-container">
+        <h2>Controls</h2>
+        <div class="control">
+            <label for="particle-color">Particle Color</label>
+            <input type="color" id="particle-color" value="#ffffff">
+        </div>
+        <div class="control">
+            <label for="line-color">Line Color</label>
+            <input type="color" id="line-color" value="#ffffff">
+        </div>
+        <div class="control">
+            <label for="particle-amount">Particle Density</label>
+            <input type="range" id="particle-amount" min="50" max="500" value="200">
+        </div>
+        <div class="control">
+            <label for="mouse-radius">Mouse Radius</label>
+            <input type="range" id="mouse-radius" min="50" max="400" value="200">
+        </div>
+        <div class="control">
+            <label for="particle-size">Particle Size</label>
+            <input type="range" id="particle-size" min="1" max="10" value="4">
+        </div>
+        <div class="control">
+            <label for="blurriness">Blurriness</label>
+            <input type="range" id="blurriness" min="0" max="30" value="5">
+        </div>
+        <div class="control">
+            <label for="difference">Difference</label>
+            <input type="range" id="difference" min="0" max="1" step="0.01" value="0.8">
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

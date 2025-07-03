@@ -11,6 +11,19 @@ const mouse = {
 let particles = [];
 let gridColumns, gridRows;
 
+// Control panel elements
+const controlsContainer = document.querySelector('.controls-container');
+const toggleControlsButton = document.getElementById('toggle-controls');
+
+// Toggle controls visibility on mobile
+if (window.innerWidth <= 768) {
+    controlsContainer.classList.remove('active'); // Ensure it's hidden by default
+}
+
+toggleControlsButton.addEventListener('click', () => {
+    controlsContainer.classList.toggle('active');
+});
+
 // Control inputs
 const particleColorInput = document.getElementById('particle-color');
 const lineColorInput = document.getElementById('line-color');
@@ -29,9 +42,19 @@ let particleSize = particleSizeInput.value;
 let blurriness = blurrinessInput.value;
 let difference = differenceInput.value;
 
+// Pre-calculated RGB colors for performance
+let rgbParticleColor = hexToRgb(particleColor);
+let rgbLineColor = hexToRgb(lineColor);
+
 // Event listeners for controls
-particleColorInput.addEventListener('change', (e) => particleColor = e.target.value);
-lineColorInput.addEventListener('change', (e) => lineColor = e.target.value);
+particleColorInput.addEventListener('change', (e) => {
+    particleColor = e.target.value;
+    rgbParticleColor = hexToRgb(particleColor);
+});
+lineColorInput.addEventListener('change', (e) => {
+    lineColor = e.target.value;
+    rgbLineColor = hexToRgb(lineColor);
+});
 particleAmountInput.addEventListener('input', (e) => {
     numberOfParticles = e.target.value;
     init();
@@ -54,6 +77,29 @@ window.addEventListener('mousemove', (event) => {
 });
 
 window.addEventListener('mouseout', () => {
+    mouse.x = undefined;
+    mouse.y = undefined;
+});
+
+// Touch events for mobile
+canvas.addEventListener('touchstart', (event) => {
+    event.preventDefault(); // Prevent scrolling
+    mouse.x = event.touches[0].clientX;
+    mouse.y = event.touches[0].clientY;
+});
+
+canvas.addEventListener('touchmove', (event) => {
+    event.preventDefault(); // Prevent scrolling
+    mouse.x = event.touches[0].clientX;
+    mouse.y = event.touches[0].clientY;
+});
+
+canvas.addEventListener('touchend', () => {
+    mouse.x = undefined;
+    mouse.y = undefined;
+});
+
+canvas.addEventListener('touchcancel', () => {
     mouse.x = undefined;
     mouse.y = undefined;
 });
@@ -88,7 +134,6 @@ class Particle {
     }
 
     draw() {
-        const rgbParticleColor = hexToRgb(particleColor);
         if (!rgbParticleColor) return;
 
         ctx.fillStyle = `rgba(${rgbParticleColor.r}, ${rgbParticleColor.g}, ${rgbParticleColor.b}, ${this.opacity})`;
@@ -104,17 +149,22 @@ class Particle {
     }
 
     update() {
+        const REPEL_FORCE_MULTIPLIER = 15;
+        const RETURN_TO_ORIGIN_EASING = 0.1;
+
         if (mouse.x !== undefined && mouse.y !== undefined) {
             const dx = this.x - mouse.x;
             const dy = this.y - mouse.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            const forceDirectionX = dx / distance;
-            const forceDirectionY = dy / distance;
+            const distanceSq = dx * dx + dy * dy; // Use squared distance
+            const mouseRadiusSq = mouseRadius * mouseRadius; // Use squared mouse radius
 
-            if (distance < mouseRadius) {
+            if (distanceSq < mouseRadiusSq) {
+                const distance = Math.sqrt(distanceSq); // Only calculate sqrt if within radius
+                const forceDirectionX = dx / distance;
+                const forceDirectionY = dy / distance;
                 const force = (mouseRadius - distance) / mouseRadius;
-                this.x += forceDirectionX * force * 15;
-                this.y += forceDirectionY * force * 15;
+                this.x += forceDirectionX * force * REPEL_FORCE_MULTIPLIER;
+                this.y += forceDirectionY * force * REPEL_FORCE_MULTIPLIER;
             } else {
                 this.returnToOrigin();
             }
@@ -124,11 +174,12 @@ class Particle {
     }
 
     returnToOrigin() {
+        const RETURN_TO_ORIGIN_EASING = 0.1;
         if (this.x !== this.originX || this.y !== this.originY) {
             const dx_origin = this.originX - this.x;
             const dy_origin = this.originY - this.y;
-            this.x += dx_origin * 0.1; // Easing back to origin
-            this.y += dy_origin * 0.1;
+            this.x += dx_origin * RETURN_TO_ORIGIN_EASING;
+            this.y += dy_origin * RETURN_TO_ORIGIN_EASING;
         }
     }
 }
@@ -151,7 +202,6 @@ function init() {
 }
 
 function connect() {
-    const rgbLineColor = hexToRgb(lineColor);
     if (!rgbLineColor) return;
 
     for (let i = 0; i < particles.length; i++) {
@@ -172,19 +222,20 @@ function connect() {
 }
 
 function drawConnection(p1, p2, color) {
+    const MAX_LINE_DISTANCE = 150;
+
     const dx = p1.x - p2.x;
     const dy = p1.y - p2.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
-    const maxDist = 150; // Maximum distance to draw a line
 
-    if (distance < maxDist) {
-        const opacity = 1 - (distance / maxDist);
+    if (distance < MAX_LINE_DISTANCE) {
+        const opacity = 1 - (distance / MAX_LINE_DISTANCE);
         const avgOpacity = (p1.opacity + p2.opacity) / 2;
         ctx.strokeStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${opacity * avgOpacity})`;
         ctx.lineWidth = 0.7;
         ctx.beginPath();
         ctx.moveTo(p1.x, p1.y);
-        ctx.lineTo(p2.x, p2.y);
+        ctx.lineTo(p2.y, p2.y);
         ctx.stroke();
     }
 }

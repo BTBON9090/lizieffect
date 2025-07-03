@@ -235,7 +235,7 @@ function drawConnection(p1, p2, color) {
         ctx.lineWidth = 0.7;
         ctx.beginPath();
         ctx.moveTo(p1.x, p1.y);
-        ctx.lineTo(p2.y, p2.y);
+        ctx.lineTo(p2.x, p2.y);
         ctx.stroke();
     }
 }
